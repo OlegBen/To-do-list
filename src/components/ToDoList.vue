@@ -1,14 +1,14 @@
 <template>
     <div class="toDoList">
-        <input type="text" v-model.lazy="text">
-        <input type="time" v-model.lazy="time">
-        <button @click="addElement">Добавить</button>
+        <input type="text" v-model.lazy="taskText">
+        <input type="time" v-model.lazy="taskTime">
+        <button @click="addTask">Добавить</button>
 
         <ul>
-            <li v-for="(elem, index) in arr">
-                <div class="wrapper">
-                    {{ index }}: {{ elem.text }} - {{ elem.time }}
-                    <button @click="deleteElement(index)">Удалить</button>
+            <li v-for="(task, index) in tasks">
+                <div class="toDoList-item">
+                    {{ index }}: {{ task.taskText }} - {{ task.taskTime }}
+                    <button @click="deleteTask(index)">Удалить</button>
                 </div>
             </li>
         </ul>
@@ -19,25 +19,25 @@
     export default {
         data() {
             return {
-                text: '',
-                time: '',
-                arr: []
+                taskText: '',
+                taskTime: '',
+                tasks: []
             }
         },
         methods: {
-            addElement: function() {
-                if(this.text !== '' && this.time !== '') {
+            addTask: function() {
+                if(this.taskText !== '' && this.taskTime !== '') {
                     let resObj = {
-                        text: this.text,
-                        time: this.time
+                        taskText: this.taskText,
+                        taskTime: this.taskTime
                     };
-                    this.arr.push(Object.assign({}, resObj));
+                    this.tasks.push(Object.assign({}, resObj));
                 }
-                this.text = '';
-                this.time = '';
+                this.taskText = '';
+                this.taskTime = '';
             },
-            deleteElement: function(index) {
-                this.arr.splice(index,1);
+            deleteTask: function(index) {
+                this.tasks.splice(index,1);
             }
         }
     }
