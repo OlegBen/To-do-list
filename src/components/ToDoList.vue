@@ -1,53 +1,62 @@
 <template>
-    <div class="toDoList">
-        <h1>Список дел</h1>
-
-        <!--Поле для текста задания-->
-        <div class="input-group mb-3 col">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="inputGroup-sizing-default">Задание</span>
-            </div>
-            <input
-                    type="text"
-                    class="form-control"
-                    v-model.lazy="taskText"
-            />
-        </div>
-
-        <!--Поле для времени-->
-        <div class="input-group mb-3 col">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Время</span>
-            </div>
-            <input
-                    type="time"
-                    class="form-control"
-                    v-model.lazy="taskTime"
-            />
-        </div>
-
-        <!--Предупреждение о наличии незаполненых полей-->
-        <div class="invalid-feedback mb-1">
-            Заполните все поля.
-        </div>
-
-        <!--Кнопка добавления нового задания-->
-        <button class="btn btn-primary" @click="addTask">Добавить</button>
-
-        <!--Список всех дел-->
-        <ul class="list-group list-group-horizontal mt-3">
-            <!--Шаблон задания-->
-            <li class="list-group-item" v-for="(task, index) in tasks">
-                <div class="card text-white bg-success">
-                    <div class="card-header">Задание №{{ index + 1 }}</div>
-                    <div class="card-body">
-                        <h5 class="card-title">Выполнить до {{ task.taskTime }}</h5>
-                        <p class="card-text">{{ task.taskText }}</p>
-                        <button class="btn btn-light" @click="deleteTask(index)">Удалить</button>
-                    </div>
+    <div class="wrapper">
+        <div v-if="isLoad">
+            <div class="d-flex justify-content-center mt-5">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
                 </div>
-            </li>
-        </ul>
+            </div>
+        </div>
+        <div class="toDoList" v-else="">
+            <h1>Список дел</h1>
+            <!--Поле для текста задания-->
+            <div class="input-group mb-3 col">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-default">Задание</span>
+                </div>
+                <input
+                        type="text"
+                        class="form-control"
+                        v-model.lazy="task.text"
+                />
+            </div>
+
+            <!--Поле для времени-->
+            <div class="input-group mb-3 col">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Время</span>
+                </div>
+                <input
+                        type="time"
+                        class="form-control"
+                        v-model.lazy="task.time"
+                />
+            </div>
+
+            <!--Предупреждение о наличии незаполненых полей-->
+            <div class="invalid-feedback mb-1" v-if="emptyFields">
+                Заполните все поля.
+            </div>
+
+            <!--Кнопка добавления нового задания-->
+            <button class="btn btn-primary" @click="addTask">Добавить</button>
+
+            <!--Список всех дел-->
+            <ul class="list-group list-group-horizontal mt-3">
+                <!--Шаблон задания-->
+                <li class="list-group-item" v-for="(task, index) in tasks">
+                    <div class="card text-white bg-success">
+                        <div class="card-header">Задание №{{ index + 1 }}</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Выполнить до {{ task.time }}</h5>
+                            <p class="card-text">{{ task.text }}</p>
+                            <button class="btn btn-light" @click="deleteTask(index)">Удалить</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
     </div>
 </template>
 
@@ -55,35 +64,37 @@
     export default {
         data() {
             return {
-                taskText: '', //Сохранение значения поля с заданием
-                taskTime: '', //Сохранение значения поля с временем
+                isLoad: false,
+                emptyFields: false,
+                task: {
+                    text: '', //Сохранение значения поля с заданием
+                    time: '' //Сохранение значения поля с временем
+                },
                 tasks: [] //Список дел
             }
         },
+        mounted: function() {
+            //Функция для получения массива из localStorage
+            this.loadFromLS();
+            //Убрать лоадер
+            this.isLoad = false;
+        },
         methods: {
             addTask: function() { //Добавление нового задания
-                //Получаю доступ к преудпреждению
-                let warningAlert = document.querySelector('.invalid-feedback');
-
                 //Проверка на валидность
-                if(this.taskText !== '' && this.taskTime !== '') {
-                    //Объект с данными из полей
-                    let resObj = {
-                        taskText: this.taskText,
-                        taskTime: this.taskTime
-                    };
+                if(this.task.text !== '' && this.task.time !== '' && this.task.text.trim() !== '') {
                     //Отправка копии объекта в массив с заданиями
-                    this.tasks.push(Object.assign({}, resObj));
+                    this.tasks.push({...this.task});
                     //Скрытие предупреждения
-                    warningAlert.style.display = 'none';
+                    this.emptyFields = false;
                     //Очищаем значения полей
-                    this.taskText = '';
-                    this.taskTime = '';
+                    this.task.text = '';
+                    this.task.time = '';
                     //Записываем в localStorage новый массив
                     this.setItems();
                 } else {
                     //В случае наличия незаполненых полей, выводим предупреждение
-                    warningAlert.style.display = 'block';
+                    this.emptyFields = true;
                 }
             },
             deleteTask: function(index) { //Удаление задания из массива
@@ -93,6 +104,8 @@
                 this.setItems();
             },
             loadFromLS: function() { //Получение массива из localStorage
+                //Запуск лоадера
+                this.isLoad = true;
                 //В переменную tasks записываем либо полученный массив из localStorage
                 //либо пустой массив, если ничего не найдено
                 this.tasks = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -100,15 +113,6 @@
             setItems: function() { //Сохранение массива в localStorage
                 localStorage.setItem("tasks", JSON.stringify(this.tasks));
             }
-        },
-        created: function() {
-            //Почему именно created?
-            //Так как используя beforeCreate, невозможно обратится к переменным,
-            //так как они ещё не были созданы. А при использовании created,
-            //переменные внутри data уже созданы, и к ним можно обратится.
-
-            //Функция для получения массива из localStorage
-            this.loadFromLS();
         }
     }
 </script>
@@ -127,6 +131,7 @@
     }
     /*Правки стилей предупреждеия*/
     .invalid-feedback {
+        display: block;
         margin-top: -10px;
     }
 </style>
