@@ -7,7 +7,7 @@
         <ul>
             <li v-for="(task, index) in tasks">
                 <div class="toDoList-item">
-                    {{ index }}: {{ task.taskText }} - {{ task.taskTime }}
+                    {{ task.taskText }} - {{ task.taskTime }}
                     <button @click="deleteTask(index)">Удалить</button>
                 </div>
             </li>
@@ -35,10 +35,21 @@
                 }
                 this.taskText = '';
                 this.taskTime = '';
+                this.setItems();
             },
             deleteTask: function(index) {
-                this.tasks.splice(index,1);
+                this.tasks.splice(index, 1);
+                this.setItems();
+            },
+            loadFromLS: function() {
+                this.tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+            },
+            setItems: function() {
+                localStorage.setItem("tasks", JSON.stringify(this.tasks));
             }
+        },
+        created: function() {
+            this.loadFromLS();
         }
     }
 </script>
